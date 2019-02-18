@@ -1,0 +1,7 @@
+systemctl stop chronyd
+timedatectl set-ntp no
+systemctl stop ntpd
+timedatectl set-time "YYYY-MM-DD HH:MM:SS"
+# sudo systemctl start ntpd.service
+# sudo systemctl stop ntpd.service
+# sudo date -s "$1 `date +%T`"

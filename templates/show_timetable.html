@@ -1,0 +1,174 @@
+{% extends "layout.html" %}
+{% block body %}
+  {% if session.logged_in %}
+<form action="{{ url_for('admin.add_timetable') }}" method="post" class="add-entry">
+  <table>
+    <tr><td>Day</td>
+      <td>
+        {% for key,value in sel_day.items()%}
+        <label><input name="WeekDay" type="radio" value={{key}} 
+        {% if (session.add_par and key==session.add_par.get('A_day')) or key==1 %} checked {% endif %} />{{ value }}</label>
+        {% endfor %}
+      </td>
+    </tr>
+    <tr>
+      <td>Slot</td>
+      <td>
+        {% for key,value in sel_slot.items()%}
+        <label><input name="DaySlot" type="radio" value={{key}} 
+        {% if (session.add_par and key==session.add_par.get('A_slot')) or key==1 %} checked {% endif %} />{{ value }}</label>
+        {% endfor %}
+      </td>
+    </tr>
+    <tr>
+      <td>Length</td>
+      <td>
+        {% if session.add_par%} {% set add_slen = session.add_par.get('A_slen') %} {% endif %}
+        {% for idx in (1,2) %}
+        <label><input name="SlotLen" type="radio" value={{idx}} {% if add_slen == idx or idx==1 %} checked {% endif %}>{{idx}}</label>
+        {% endfor %}
+      </td>
+    </tr>
+    <tr>
+      <td>Course</td>
+      <td>
+        <select name="OptCourse">
+          {% if session.add_par%} {% set add_cid = session.add_par.get('A_cid') %} {% endif %}
+          {% for c_id, name in session.tbl_opt_map.get('CO') %}
+          <option value={{ c_id }} {% if add_cid == c_id %} selected="selected" {% endif %}>{{ name }}</option>
+          {% endfor %}
+        </select>
+      </td>
+    </tr>
+    <tr>
+      <td>Teacher</td>
+      <td>
+        <select name="OptTeacher">
+          {% for t_id, name in session.tbl_opt_map.get('TE') %}
+          <option value={{ t_id }} 
+          {% if session.add_par and session.add_par.get('A_tid') == t_id %} selected="selected" {% endif %}>{{ name }}</option>
+          {% endfor %}
+        </select>
+      <td>
+    </tr>
+    <tr>
+      <td>Classroom</td>
+      <td>
+        <select name="OptClassroom">
+          {% for cr_id, cr_name in session.tbl_opt_map.get('CR') %}
+          <option value={{ cr_id }} 
+          {% if session.add_par and session.add_par.get('A_crid') == cr_id %} selected="selected" {% endif %}>{{ cr_name }}</option>
+          {% endfor %}
+        </select>
+      </td>
+    </tr>
+    <tr>
+      <td><input type="submit" value="Add"></td>
+    </tr>
+  </table>
+</form>
+<form action="{{ url_for('admin.show_timetable') }}" method="post" id="show_opt">
+<table>
+  <tr>
+    <td>
+      <select name="SeaDay">
+        <option value="0">Day</option>
+        {% for key, value in sel_day.items() %}
+        <option value={{ key }} {% if S_par.get('S_day') == key %} selected="selected" {% endif %}>{{ value }}</option>
+        {% endfor %}
+      </select>
+    </td>
+    <td>
+      <select name="SeaSlot">
+        <option value="0">Slot</option>
+        {% for key, value in sel_slot.items() %}
+        <option value={{ key }} {% if S_par.get('S_slot') == key %} selected="selected" {% endif %}>{{ value }}</option>
+        {% endfor %}
+      </select>
+    </td>
+    <td>
+      <select name="SeaCourse">
+        <option value="0">Courses</option>
+        {% for c_id, name in session.tbl_opt_map.get('CO') %}
+        <option value={{ c_id }} {% if S_par.get('S_cid') == c_id %} selected="selected" {% endif %}>{{ name }}</option>
+        {% endfor %}
+      </select>
+    </td>
+    <td>
+      <select name="SeaTeacher">
+        <option value="0">Teachers</option>
+        {% for t_id, name in session.tbl_opt_map.get('TE') %}
+        <option value={{ t_id }} {% if S_par.get('S_tid') == t_id %} selected="selected" {% endif %}>{{ name }}</option>
+        {% endfor %}
+      </select>      
+    </td>
+    <td>
+      <select name="SeaClassroom">
+        <option value="0">Classrooms</option>
+        {% for cr_id, cr_name in session.tbl_opt_map.get('CR') %}
+        <option value={{ cr_id }} {% if S_par.get('S_crid') == cr_id %} selected="selected" {% endif %}>{{ cr_name }}</option>
+        {% endfor %}
+      </select>
+    </td>
+    <td>
+      <td><input type="submit" value="Search"></td>
+      <td><a href="{{ url_for('admin.show_timetable') }}"><input type="button" value="All"></a></td>
+    </td>
+  </tr>
+  <input style="display:none;" name="PageIndex" id="PageIndex" value={{page_index}} />
+</table>
+</form>
+<script type="text/javascript">
+function page_move(step)
+{
+   var page_index = document.getElementById('PageIndex');
+   page_index.value = parseInt(page_index.value)+parseInt(step); 
+   document.getElementById('show_opt').submit();
+}
+function page_go()
+{
+   var page_index = document.getElementById('PageIndex');
+   page_index.value = document.getElementById('PageGo').value; 
+   document.getElementById('show_opt').submit();
+}
+</script>
+<form action="{{ url_for('admin.delete_timetable') }}" method="post" name="tt_entry">
+<table class="table-striped">
+  <thread>
+    {% if page_count > 0 %} 
+    <tr>
+      <td><input type="submit" value="Delete"></td>
+      <td><a href="{{ url_for('admin.purge_timetable') }}" >
+          <input type="button" value="Purge" onclick="return confirm('Confirm to purge All?')" />
+          </a>
+      </td>
+      <td>
+          <input type="button" value="Prev" onclick="page_move(-1)" {% if page_index == 1 %} disabled="disabled" {% endif %} />
+          <input type="button" value="Next" onclick="page_move(1)" {% if page_index == page_count %} disabled="disabled" {% endif %} />
+          <input id = "PageGo" name = "PageGo" value={{page_index}} size="1" onkeyup="this.value=this.value.replace(/[^0-9-]+/,'');" />
+          <input type="button" value="Go" onclick="page_go()">
+          {{page_index}}/{{ page_count}} Page
+      </td>
+    </tr>
+    {% endif %}
+    <tr>
+      <th>Day</th><th>Slot</th><th>Course</th><th>Teacher</th><th>Classroom</th>
+    </tr>
+  </thread>
+  <tbody>
+      {% for id,day,slot,name,tname,crname in entries %}
+      <tr>
+        <td><input name="TTID" type="checkbox" value={{ id }} />{{ sel_day.get(day) }}</td>
+        <td>{{ sel_slot.get(slot) }}</td>
+        <td>{{ name }}</td><td>{{ tname }}</td><td>{{ crname }}</td>
+      </tr>
+      {% else %}
+      <tr><td>No entries here</td></tr>
+      {% endfor %}
+  </tbody>
+</table>
+</form>
+  {% endif %}
+  {% endblock %}
+
+  

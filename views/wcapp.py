@@ -598,7 +598,7 @@ def wc_reportweekly():
             students = cursor.fetchall()
             sdata=[]
             if students:
-                for(id,name,e_name,abs,slp,vio,a_total,a_count,t_total,t_count,p_total,p_count) in students:
+                for(id,name,e_name,abs,lat,vio,a_total,a_count,t_total,t_count,p_total,p_count) in students:
                     one_data = []
                     one_data.append(id)
                     if t_type == 1:
@@ -612,7 +612,7 @@ def wc_reportweekly():
                     p_val = 0 if p_count == 0 else round(p_total/p_count,1)
                     one_data.append(p_val)
                     one_data.append(abs)
-                    one_data.append(slp)
+                    one_data.append(lat)
                     one_data.append(vio)
                     sdata.append(one_data)
 
@@ -681,10 +681,10 @@ def wc_reportdetail():
                                 where s_id=%s and se_id=%s group by se_id limit 1',(s_id,se_id))
                 
             a_report = cursor.fetchone()
-            abs= slp = vio = 0
+            abs= lat = vio = 0
             if a_report:
-                abs,slp,vio = a_report
-            a_data={'abs':str(abs),'slp':str(slp),'vio':str(vio)}
+                abs,lat,vio = a_report
+            a_data={'abs':str(abs),'lat':str(lat),'vio':str(vio)}
             output.update({'adata':a_data})
 
             r_data=[]

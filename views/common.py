@@ -39,9 +39,9 @@ def get_db():
 # http://www.cnblogs.com/zhaohuhu/p/9218075.html
 
 VioAbsence = 1
-VioSleep = 2
+VioLate = 2
 VioGeneric = 4
-VioTypeMap = {VioAbsence:'Absence',VioSleep:'Sleep',VioGeneric:'Violation'}
+VioTypeMap = {VioAbsence:'Absence',VioLate:'Late',VioGeneric:'Violation'}
 
 def get_weekofday():
     return datetime.now().weekday()+1 #need to consider the timezone
@@ -80,19 +80,19 @@ def count_week(today,start,end,vacations):
 def get_vioset_strfull(vio_value):
     vioset_desc = []
     if(vio_value & VioAbsence > 0):
-        vioset_desc.append('ABSENCE')
-    if(vio_value & VioSleep > 0):
-        vioset_desc.append('SLEEP')
+        vioset_desc.append('Absence')
+    if(vio_value & VioLate > 0):
+        vioset_desc.append('Late')
     if(vio_value & VioGeneric > 0):
-        vioset_desc.append('VIOLATION')
+        vioset_desc.append('Violation')
     return ','.join(vioset_desc)
 
 def get_vioset_str(vio_value):
     vioset_desc = []
     if(vio_value & VioAbsence > 0):
         vioset_desc.append('ABS')
-    if(vio_value & VioSleep > 0):
-        vioset_desc.append('SLE')
+    if(vio_value & VioLate > 0):
+        vioset_desc.append('LAT')
     if(vio_value & VioGeneric > 0):
         vioset_desc.append('VIO')
     return ','.join(vioset_desc)

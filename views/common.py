@@ -47,8 +47,11 @@ def get_weekofday():
     return datetime.now().weekday()+1 #need to consider the timezone
 
 def get_today():
-    #return date(2019,2,18)
     return datetime.today().date() #need to consider the timezone
+    #return date(2019,2,18)
+
+def get_time_now():
+    return datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
 # count the index of week in one semester, also return if in vacations
 def count_week(today,start,end,vacations):

@@ -119,14 +119,15 @@ def wc_signup():
                     else:
                         need_login = True
                         # if it exists
-                        cursor.execute('select t_id from users where openid=%s and authority<>1 limit 1',openid)
+                        cursor.execute('select t_id from users where openid=%s limit 1',openid)
                         record = cursor.fetchone()
                         if not record: # new user, sign up
                             cursor.execute('insert into users(openid,t_id,authority,status) values (%s,%s,%s,%s)',(openid,t_id,2,0))
                             db.commit()
                         elif record[0] != t_id: # user exists but openid and t_id mismatches!
-                            need_login = False
-                            error = ERR_SIGNUP_MISMATCH
+                            # need_login = False
+                            # error = ERR_SIGNUP_MISMATCH
+                            print('[%s] %s login as %s!'%(get_time_now(),record[0],t_id)) 
 
                         if need_login: # user exists or just created, sign in
                             cursor.execute('select u.status,u.id,u.t_id,t.type,t.name from users as u,teachers as t \

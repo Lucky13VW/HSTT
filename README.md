@@ -1,2 +1,3 @@
-# HSTT
-High school time table(HSTT), server side for WechatAppHightSchoolDaily
+# HSTT -- High school time table
+Server side for WechatApp HightSchoolDaily. 
+Build on flask.

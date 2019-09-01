@@ -95,7 +95,9 @@ def import_db_teachers(db,ws):
                 # insert into teachers
                 cursor.execute('insert into teachers(id,name,phone,type) values(%s,%s,%s,%s)',
                                (index,t_name.encode('utf-8'),t_tel,t_type))
-
+        # add admin role
+        cursor.execute('insert into teachers(id,name,phone,type,descr) values(%s,%s,%s,%s,%s)',
+                               (999,'admin'.encode('utf-8'),13120911999,9,'for admin & debug'.encode('utf-8')))
         # insert into classes
         for (cl_name,t_id) in class_ft_map.items():
             cursor.execute('insert into classes(name,ft_id) values(%s,%s)',(cl_name,t_id))
@@ -143,7 +145,7 @@ def import_db_timetable(db,ws):
         for i in range(2,max_row):
             col_day = ws.cell(row=i,column=COL_DAY).value
             col_slot = ws.cell(row=i,column=COL_SLOT).value
-            c_name = ws.cell(row=i,column=COL_COURSE).value
+            c_name = ws.cell(row=i,column=COL_COURSE).value.strip().upper()
             t_name = ws.cell(row=i,column=COL_TEACHER).value
             cr_name = ws.cell(row=i,column=COL_CLASSROOM).value
             
@@ -168,8 +170,7 @@ def import_db_timetable(db,ws):
             if cr_id == 0:
                 print(('Timetable: unknown classroom,row=%d,room=%s')%(i,cr_name))
                 continue            
-            
-            c_name = c_name.strip()                
+                            
             course_id = course_id_map.get(c_name,0)
             if (course_id == 0):
                 # new course, add this course into db and set
@@ -199,6 +200,7 @@ def import_db_enrollment(db,ws):
     COL_STU_ENG = 5
     COL_STU_GENDER = 6
     COL_COURSE = 8
+    COURSE_COUNT = 7
     
     print('Importing enrollment standby...')
     with db.cursor() as cursor:
@@ -229,7 +231,7 @@ def import_db_enrollment(db,ws):
         
         max_row = ws.max_row+1
         for i in range(2,max_row):
-            s_class_name = ws.cell(row=i,column=COL_CLASS).value
+            s_class_name = ws.cell(row=i,column=COL_CLASS).value.strip()
             s_id = ws.cell(row=i,column=COL_STU_ID).value
             s_name = ws.cell(row=i,column=COL_STU_NAME).value
             s_pinyin = ws.cell(row=i,column=COL_STU_PINYIN).value
@@ -243,9 +245,9 @@ def import_db_enrollment(db,ws):
             else:
                 stu_id_map.add(s_id)
 
-            cl_id = class_name_map.get(s_class_name.strip(),0)
+            cl_id = class_name_map.get(s_class_name,0)
             if(cl_id == 0):
-                print('Enrollment: unkonw class=%s,line=%d'%(s_class_name.strip(),i))
+                print('Enrollment: unkonw class=%s,line=%d'%(s_class_name,i))
                 continue
 
             # new student info
@@ -256,15 +258,21 @@ def import_db_enrollment(db,ws):
             
 
             s_courses_id=[]
-            for j in range(0,5):
+            for j in range(0,COURSE_COUNT):
                 course_name = ws.cell(row=i,column=COL_COURSE+j).value
+                if course_name != None:
+                    course_name = course_name.strip().upper()
+                else:
+                    print('Enrollment: no course row=%d,col=%d'%(i,COL_COURSE+j))
+                    continue
+                    
                 course_id = course_name_map.get(course_name.strip(),0)
                 if(course_id != 0):
                     s_courses_id.append(course_id)
                 else:
                     print('Enrollment: unknown course=%s,line=%d'%(course_name,i))
 
-            if len(s_courses_id) != 5:
+            if len(s_courses_id) == 0: # no course matched
                 continue
 
             for c_id in s_courses_id:
@@ -281,6 +289,26 @@ def import_db_enrollment(db,ws):
         print('Importing %d students done!'%stu_index)
         print('Importing %d enrollment done!'%e_count)
 
+def clear_history_data(db):
+    # insert into teachers,classes
+    print('Clearing history records standby...')
+
+    with db.cursor() as cursor:
+        cursor.execute('set foreign_key_checks = 0')
+        
+        print('Resetting attendance report')
+        cursor.execute('truncate attendance')
+        cursor.execute('truncate attendext')
+        print('Resetting weekly report')
+        cursor.execute('truncate evalweekly')
+        cursor.execute('truncate reportweekly')
+        print('Reseting users')
+        cursor.execute('delete from users where t_id != 999')
+        
+        cursor.execute('set foreign_key_checks = 1')
+            
+        db.commit()
+        
 def setup_db(xlsx_file):
     db = pymysql.connect(user='vw', password='letmein', database='hs_timetable', charset='utf8')
     wb = load_workbook(xlsx_file)
@@ -291,6 +319,7 @@ def setup_db(xlsx_file):
     import_db_timetable(db,ws)
     ws = wb['Enrollment']
     import_db_enrollment(db,ws)
+    clear_history_data(db)
     db.close()
 
     '''
